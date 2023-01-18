@@ -5,12 +5,11 @@
 clear all % clear all variables from memory
 close all % close all open figures
 
-mu = [0 0]'; % the mean of the pdf
-sigma = [1 0; 0 1]; % the variance matrix of the pdf
+mu = [5 0]'; % the mean of the pdf
+sigma = [1 0; 0 4]; % the variance matrix of the pdf
 
-dx = 0.1; % step-size
-x1 = -3:dx:3; % range of the random variable x1
-x2 = -3:dx:3; % range of the random variable x2
+x1 = (mu(1)-2.5*sigma(1,1)):sigma(1,1)/10:(mu(1)+2.5*sigma(1,1)); % range of the random variable x1
+x2 = (mu(2)-2.5*sigma(2,2)):sigma(2,2)/10:(mu(2)+2.5*sigma(2,2)); % range of the random variable x2
 
 % Calculate the pdf
 y = Gauss2d(x1,x2,mu,sigma);
@@ -27,7 +26,7 @@ subplot(2,1,2);
 contour(x1,x2,y);
 xlabel("x_{1}");
 ylabel("x_{2}");
-axis equal;
+axis square;
 
 % Show a colour map of the pdf
 figure;
@@ -36,7 +35,7 @@ xlabel("x_{1}");
 ylabel("x_{2}");
 
 % Plot region where pdf is greater than 0.1
-z = (y>0.1);
+z = (y>0.05);
 
 figure;
 colormap summer;
