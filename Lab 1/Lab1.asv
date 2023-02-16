@@ -1,0 +1,61 @@
+% Case 1 Data
+N_A = 200;
+mu_A = [5 10]';
+cov_A = [8 0;
+        0 4];
+
+N_B = 200;
+mu_B = [10 15]';
+cov_B = [8 0;
+        0 4];
+
+% Case 2 Data
+N_C = 100;
+mu_C = [5 10]';
+cov_C = [8 4;
+        4 40];
+
+N_D = 200;
+mu_D = [15 10]';
+cov_D = [8 0;
+        0 8];
+
+N_E = 150;
+mu_E = [10 5]';
+cov_E = [10 -5
+        -5 20];
+
+% 2 Generating Clusters
+
+cluster_A = generateClusters(N_A, mu_A, cov_A);
+cluster_B = generateClusters(N_B, mu_B, cov_B);
+
+
+cluster_C = generateClusters(N_C, mu_C, cov_C);
+cluster_D = generateClusters(N_D, mu_D, cov_D);
+cluster_E = generateClusters(N_E, mu_E, cov_E);
+
+function cluster = generateClusters(N, mu, cov)
+    [eigenvectors, eigenvalues] = eig(cov);
+    
+    % TWO WAYS OF MAKING THE RANDOM POINTS, THEY WOULD PROBABLY WANT
+    % REVERSE WHITENING TRANSFROM?
+
+    % Bivariate Normal Random Numbers Example from randn 
+    % points = repmat(mu', N, 1) + randn(N,2)*chol(cov)
+    
+    % Reverse Whitening Transfrom
+    cluster = repmat(mu', N, 1) + randn(N,2)*sqrt(eigenvalues)*inv(eigenvectors');
+    
+%     hold on
+%     scatter(points1(:,1), points1(:,2))
+%     scatter(points2(:,1), points2(:,2), 'd')
+%     plot_ellipse(mu(1), mu(2), atan2(eigenvectors(1,2), eigenvectors(1,1)),sqrt(eigenvalues(1,1)),sqrt(eigenvalues(2,2)),'red')
+    
+end
+
+function 
+
+
+
+
