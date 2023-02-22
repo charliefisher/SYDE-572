@@ -18,10 +18,18 @@
 
 function plot_ellipse(x,y,theta,a,b,color)
 
-if nargin<5, error('Too few arguments to Plot_Ellipse.'); end;
+if nargin < 5
+    error('Too few arguments to Plot_Ellipse.'); 
+end
 
 np = 100;
 ang = [0:np]*2*pi/np;
-pts = [x;y]*ones(size(ang)) + [cos(theta) -sin(theta); sin(theta) cos(theta)]*[cos(ang)*a; sin(ang)*b];
+
+R = [cos(theta) -sin(theta); sin(theta) cos(theta)];  % rotation matrix
+ellipse = [cos(ang)*a; sin(ang)*b];  % create an elipse aligned with axis at (0,0)
+
+% add a the mean to every point of a roated ellipse
+pts = [x;y]*ones(size(ang)) + R*ellipse;
+
 plot( pts(1,:), pts(2,:) , 'Color', color );
 
