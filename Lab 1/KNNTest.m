@@ -45,7 +45,7 @@ x2 = -10:0.05:25;
 
 [X1, X2] = meshgrid(x1,x2);
 
-[~, knnMap] = KNNClassifier(case1, 5, X1, X2);
+[~, knnMap] = KNNClassifier(case2, 5, X1, X2);
 
 %% plots
 figure(1)
@@ -54,6 +54,8 @@ surf(X1,X2,knnMap,EdgeColor='none')
 
 figure(2)
 hold on
-scatter(cluster_A(:,1), cluster_A(:,2), 'b')
-scatter(cluster_B(:,1), cluster_B(:,2), 'r')
+scatter(cluster_C(:,1), cluster_C(:,2), 'b')
+scatter(cluster_D(:,1), cluster_D(:,2), 'r')
+scatter(cluster_E(:,1), cluster_E(:,2), 'g')
+
 contour(X1,X2,knnMap,'k')

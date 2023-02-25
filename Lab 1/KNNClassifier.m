@@ -12,19 +12,19 @@ function [out1, out2] = KNNClassifier(clusters, k, X1, X2)
             for m = 1:n
                 c = clusters{m};
                 dist = c - (ones(size(c)) .* x);
-                d{m} = sqrt(dist(:,1).^2 + dist(:,2).^2);
-                d{m} = [sort(d{m}) m*ones(size(d{m}))];
+                dist = sqrt(dist(:,1).^2 + dist(:,2).^2);
+                d{m} = [dist m*ones(size(dist))];
             end
 
             de = d{1};
-            for q = 2:n
-                de = [de; d{q}];
+            for m = 2:n
+                de = [de; d{m}];
             end
             
             de = sortrows(de,1);
-            de; 
-
-            h(i,j) = mode(de(1:k,2));
+            cls = de(1:k,2);
+            
+            h(i,j) = mode(cls);
 
         end
     end

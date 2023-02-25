@@ -1,4 +1,4 @@
-function [out1, out2] = MAPClassifier(mu, cov, X1, X2)
+function [out1, out2] = MAPClassifier(mu, cov, sizes, X1, X2)
 
     if length(mu) ~= length(cov)
         error('Size of mu and cov cell arrays must be of equal length\n');
@@ -12,11 +12,12 @@ function [out1, out2] = MAPClassifier(mu, cov, X1, X2)
         for j = 1:length(X2)
             
             for k = 1:n
+                Pk = sizes(k)/sum(sizes);
                 zk = cell2mat(mu(k));
                 Sk = cell2mat(cov(k));
                 x = [X1(i,j) X2(i,j)]';
-                c = power(2*pi,-size(Sk,1)/2)*power(det(Sk),-0.5);
-                g(i,j,k) = c*exp(-0.5*(x-zk)'*inv(Sk)*(x-zk));
+                c = 1/(power(2*pi,size(Sk,1)/2)*power(det(Sk),0.5));
+                g(i,j,k) = (c*exp(-0.5*(x-zk)'*inv(Sk)*(x-zk)))/Pk;
             end
             
             for k = 1:n

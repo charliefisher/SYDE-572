@@ -37,12 +37,15 @@ mu_case2 = {mu_C, mu_D, mu_E};  % store cases as cell arrays
 cov_case1 = {cov_A, cov_B};  % store cases as cell arrays
 cov_case2 = {cov_C, cov_D, cov_E};  % store cases as cell arrays
 
+sizes1 = [N_A N_B];
+sizes2 = [N_C N_D N_E];
+
 x1 = -30:0.5:60;
 x2 = -30:0.5:60;
 
 [X1, X2] = meshgrid(x1,x2);
 
-[g, h] = MAPClassifier(mu_case2, cov_case2, X1, X2);
+[g, h] = MAPClassifier(mu_case2, cov_case2, sizes2, X1, X2);
 
 %% plots
 figure(1)
