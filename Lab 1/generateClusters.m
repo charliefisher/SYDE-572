@@ -7,5 +7,5 @@ function cluster = generateClusters(N, mu, cov)
     
     % Reverse Whitening Transfrom
     [eigenvectors, eigenvalues] = eig(cov);
-    cluster = repmat(mu', N, 1) + randn(N,2)*sqrt(eigenvalues)*inv(eigenvectors');    
+    cluster = repmat(mu', N, 1) + randn(N,2)*inv(eigenvectors')*sqrt(eigenvalues);    
 end
