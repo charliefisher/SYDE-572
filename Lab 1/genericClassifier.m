@@ -11,14 +11,19 @@
 % discriminant_func
 % prototypes - K cell array - prototypes for each class; prototype can be a
 % 2x1 matrix or a N_samplesx2 matrix
-% covariances - K cell array - covariances for each class; entries are 2x2
-% matrices
+% covariances - K cell array - (optional) covariances for each class; entries are 2x2
+% matrices; if not specified, discriminant_func does not receive 
+% covariance
+% cluster_sizes - K cell array - (optional) number of elements in each 
+% cluster; if not specified, discriminant_func does not receive Nk
 %
 % OUTPUT:
 % class_label - MxM matrix - the class label for each point in meshgrid
-function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, prototypes, covariances)
+function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, prototypes, covariances, cluster_sizes)
     % covariances are optional argument since MED does not use them
     use_covariance = exist('covariances', 'var');
+    % Nk is optional argument since MED and GED do not use them
+    use_Nk = exist('cluster_sizes', 'var');
 
     % check function argument preconditions
     assert(~use_covariance || isequal(length(prototypes), length(covariances)));
@@ -51,18 +56,25 @@ function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, 
             Sk = cell2mat(covariances(k));
         end
 
+        % only use cluster size if it was provided
+        if (use_Nk)
+            Nk = cell2mat(cluster_sizes(k));
+        end
+
         % compute discriminant for each point
         for i = 1:n_points
             x = X(i,:)';
             z = zk(i,:)';
 
+            args = {x, z};
             if (use_covariance)
-                discrim = discriminant_func(x, z, Sk);
-            else
-                discrim = discriminant_func(x, z);
+                args{end+1} = Sk;
             end
+            if (use_Nk)
+                args{end+1} = Nk;
+            end   
 
-            discriminants(i,k) = discrim;
+            discriminants(i,k) = discriminant_func(args{:});
         end
     end
 
