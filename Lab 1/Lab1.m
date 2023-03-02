@@ -1,10 +1,10 @@
-close all
-clc
-clear
+close all; clear; clc;  % cleanup workspace
 
-STEP = 0.1;
-x1 = -5:STEP:25;
-x2 = -5:STEP:25;
+% set seed for random numbers to make results reproduciple
+% TODO: remove me
+rng(1);
+
+%% Class Data %%
 
 % Case 1 Data
 N_A = 200;
@@ -28,118 +28,121 @@ N_E = 150;
 mu_E = [10 5]';
 cov_E = [10 -5; -5 20];
 
-% Generating Clusters
+%% Generate Clusters %%
 cluster_A = generateClusters(N_A, mu_A, cov_A);
 cluster_B = generateClusters(N_B, mu_B, cov_B);
 cluster_C = generateClusters(N_C, mu_C, cov_C);
 cluster_D = generateClusters(N_D, mu_D, cov_D);
 cluster_E = generateClusters(N_E, mu_E, cov_E);
 
-mu_case1 = {mu_A, mu_B};  % store cases as cell arrays
-mu_case2 = {mu_C, mu_D, mu_E};  % store cases as cell arrays
+% store cases as cell arrays
+mu_case1 = {mu_A, mu_B};
+mu_case2 = {mu_C, mu_D, mu_E};
+cov_case1 = {cov_A, cov_B};
+cov_case2 = {cov_C, cov_D, cov_E};
 
-cov_case1 = {cov_A, cov_B};  % store cases as cell arrays
-cov_case2 = {cov_C, cov_D, cov_E};  % store cases as cell arrays
+%% Plot Clusters and Standard Deviation Countours %%
 
-%% Plot Clusters and Standard Deviation Countours for Case 1
-cluster1_fig = figure(1);
-hold on
+% Case 1
+clusters1_fig = figure;
+xlabel('x_1');
+ylabel('x_2');
+xlim([-5 25]);
+ylim([-5 25]);
+hold on;
 
-title('Case 1 Clusters and Standard Deviation Contours')
-xlabel('x_1')
-ylabel('x_2')
-xlim([-5,25])
-ylim([-5,25])
+scatter(cluster_A(:,1), cluster_A(:,2), 'r')
+scatter(cluster_B(:,1), cluster_B(:,2), 'b')
+plotUnitStdContour(mu_A, cov_A, 'r');
+plotUnitStdContour(mu_B, cov_B, 'b');
+legend('Class A', 'Class B');
+
+% Case 2
+clusters2_fig = figure;
+xlabel('x_1');
+ylabel('x_2');
+xlim([-5 25]);
+ylim([-5 25]);
+hold on;
+
+scatter(cluster_C(:,1), cluster_C(:,2), 'r');
+scatter(cluster_D(:,1), cluster_D(:,2), 'b');
+scatter(cluster_E(:,1), cluster_E(:,2), 'g');
+plotUnitStdContour(mu_C, cov_C, 'r');
+plotUnitStdContour(mu_D, cov_D, 'b');
+plotUnitStdContour(mu_E, cov_E, 'g');
+legend('Class C', 'Class D', 'Class E');
+
+saveas(clusters1_fig, 'clusters_case1.png');
+saveas(clusters2_fig, 'clusters_case2.png');
+
+%% Create Classifiers  %%
+
+% descriminant functions
+MED = @(x, zk, ~) (-zk'*x + 0.5*zk'*zk);
+GED = @(x, zk, Sk) sqrt((x-zk)'*inv(Sk)*(x-zk));
+MAP = @(x, zk, Sk) (exp(-0.5*(x-zk)'*inv(Sk)*(x-zk))/(power(2*pi,size(Sk,1)/2)*sqrt(det(Sk))));
+
+% classifiers
+MEDClassifier = @(X1, X2, mu_cell) genericClassifier(X1, X2, MED, @min, mu_cell);
+GEDClassifier = @(X1, X2, mu_cell, cov_cell) genericClassifier(X1, X2, GED, @min, mu_cell, cov_cell);
+MAPClassifier = @(X1, X2, mu_cell, cov_cell) genericClassifier(X1, X2, MAP, @max, mu_cell, cov_cell);
+
+%% Perform Classification %%
+
+% setup meshgrid for classification
+STEP = 0.1;
+x1 = -5:STEP:25;
+x2 = -5:STEP:25;
+[X1, X2] = meshgrid(x1, x2);
+
+% perform classification for both cases on all classifiers
+med1 = MEDClassifier(X1, X2, mu_case1);
+ged1 = GEDClassifier(X1, X2, mu_case1, cov_case1);
+med2 = MEDClassifier(X1, X2, mu_case2);
+ged2 = GEDClassifier(X1, X2, mu_case2, cov_case2);
+
+%% Plot Decision Boundaries %%
+
+% plot case 1 with cluster, standard deviation contour, and decision boundaries
+decision1_fig = figure;
+xlabel('x_1');
+ylabel('x_2');
+xlim([-5 25]);
+ylim([-5 25]);
+hold on;
 
 scatter(cluster_A(:,1), cluster_A(:,2), 'r')
 scatter(cluster_B(:,1), cluster_B(:,2), 'b')
 
-plotEllipse(mu_A, cov_A, 'r')
-plotEllipse(mu_B, cov_B, 'b')
-hold off
+plotUnitStdContour(mu_A, cov_A, 'r')
+plotUnitStdContour(mu_B, cov_B, 'b')
 
-%% Plot Clusters and Standard Deviation Countours for Case 2
-cluster2_fig = figure(2);
-hold on
+contour(X1, X2, med1, 1, LineWidth=2, EdgeColor='k');
+contour(X1, X2, ged1, 1, LineWidth=2, EdgeColor='#FF8000');
+legend('Class A', 'Class B');
 
-title('Case 2 Clusters and Standard Deviation Contours')
-xlabel('x_1')
-ylabel('x_2')
-xlim([-5,25])
-ylim([-5,25])
+% plot case 2 with cluster, standard deviation contour, and decision boundaries
+decision2_fig = figure;
+xlabel('x_1');
+ylabel('x_2');
+xlim([-5 25]);
+ylim([-5 25]);
+hold on;
 
 scatter(cluster_C(:,1), cluster_C(:,2), 'r')
 scatter(cluster_D(:,1), cluster_D(:,2), 'b')
 scatter(cluster_E(:,1), cluster_E(:,2), 'g')
 
-plotEllipse(mu_C, cov_C, 'r')
-plotEllipse(mu_D, cov_D, 'b')
-plotEllipse(mu_E, cov_E, 'g')
+plotUnitStdContour(mu_C, cov_C, 'r')
+plotUnitStdContour(mu_D, cov_D, 'b')
+plotUnitStdContour(mu_E, cov_E, 'g')
 
-hold off
+for k=1:3
+    contour(X1, X2, med2 == k, 1, LineWidth=2, EdgeColor='k');
+    contour(X1, X2, ged2 == k, 1, LineWidth=2, EdgeColor='#FF8000');
+end
+legend('Class C', 'Class D', 'Class E');
 
-% %% Calculate True Means and Covariances
-% mu_A_true = mean(cluster_A, 1)';
-% mu_B_true = mean(cluster_B, 1)';
-% mu_C_true = mean(cluster_C, 1)';
-% mu_D_true = mean(cluster_D, 1)';
-% mu_E_true = mean(cluster_E, 1)';
-% 
-% cov_A_true = cov(cluster_A);
-% cov_B_true = cov(cluster_B);
-% cov_C_true = cov(cluster_C);
-% cov_D_true = cov(cluster_D);
-% cov_E_true = cov(cluster_E);
-
-%% Classifier Case 1
-[X1, X2] = meshgrid(x1, x2);
-
-med1 = MEDClassifier([mu_A mu_B], X1, X2);
-[~, ged1] = GEDClassifier(mu_case1, cov_case1, X1, X2);
-
-figure(3)
-hold on
-
-title('Case 1 MED GED MAP')
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5,25])
-ylim([-5,25])
-
-contour(x1, x2, med1, EdgeColor='k');
-contour(X1, X2, ged1, EdgeColor='#FF8000');
-
-scatter(cluster_A(:,1), cluster_A(:,2), 'r')
-scatter(cluster_B(:,1), cluster_B(:,2), 'b')
-
-plotEllipse(mu_A, cov_A, 'r')
-plotEllipse(mu_B, cov_B, 'b')
-hold off
-
-%% Classifer Case 2
-[X1, X2] = meshgrid(x1, x2);
-
-med2 = MEDClassifier([mu_C mu_D mu_E], X1, X2);
-[~, ged2] = GEDClassifier(mu_case2, cov_case2, X1, X2);
-
-figure(4)
-hold on
-
-title('Case 2 MED GED MAP')
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5,25])
-ylim([-5,25])
-
-contour(x1, x2, med2, EdgeColor='k');
-contour(X1, X2, ged2, EdgeColor='#FF8000');
-
-scatter(cluster_C(:,1), cluster_C(:,2), 'r')
-scatter(cluster_D(:,1), cluster_D(:,2), 'b')
-scatter(cluster_E(:,1), cluster_E(:,2), 'g')
-
-plotEllipse(mu_C, cov_C, 'r')
-plotEllipse(mu_D, cov_D, 'b')
-plotEllipse(mu_E, cov_E, 'g')
-
-hold off
+saveas(decision1_fig, 'decision_boundaries_case1.png');
+saveas(decision2_fig, 'decision_boundaries_case2.png');
