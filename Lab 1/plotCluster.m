@@ -43,5 +43,5 @@ function fig = plotCluster(clusters, case_num)
 
     % add cluster names to legend
     cluster_names = case_names(case_num);
-    legend(cluster_names{:},'AutoUpdate','off');
+    legend(cluster_names{:});
 end

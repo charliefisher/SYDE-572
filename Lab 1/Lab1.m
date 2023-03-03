@@ -130,26 +130,26 @@ med2_5nn = classifyMeshgrid(X1_case2, X2_case2, NN5_2);
 % case 1 boundaries for MED, GED, and MAP
 decision1_fig = plotCluster(clusters_case1, 1);
 plotUnitStdContours(mu_case1, cov_case1);
-plotDecisionBoundary(X1_case1, X2_case1, {med1, ged1, map1});
+plotDecisionBoundary(X1_case1, X2_case1, {med1, ged1, map1}, {'MED', 'GED', 'MAP'});
 
 % case 1 boundaries for NN and 5NN
 decision1_nn_fig = plotCluster(clusters_case1, 1);
-plotDecisionBoundary(X1_case1, X2_case1, {med1_nn});
+plotDecisionBoundary(X1_case1, X2_case1, {med1_nn}, {'NN'});
 
 decision1_5nn_fig = plotCluster(clusters_case1, 1);
-plotDecisionBoundary(X1_case1, X2_case1, {med1_5nn});
+plotDecisionBoundary(X1_case1, X2_case1, {med1_5nn}, {'5NN'});
 
 % case 2 boundaries for MED, GED, and MAP
 decision2_fig = plotCluster(clusters_case2, 2);
 plotUnitStdContours(mu_case2, cov_case2);
-plotDecisionBoundary(X1_case2, X2_case2, {med2, ged2, map2});
+plotDecisionBoundary(X1_case2, X2_case2, {med2, ged2, map2}, {'MED', 'GED', 'MAP'});
 
 % case 2 boundaries for NN and 5NN
 decision2_nn_fig = plotCluster(clusters_case2, 2);
-plotDecisionBoundary(X1_case2, X2_case2, {med2_nn});
+plotDecisionBoundary(X1_case2, X2_case2, {med2_nn}, {'NN'});
 
 decision2_5nn_fig = plotCluster(clusters_case2, 2);
-plotDecisionBoundary(X1_case2, X2_case2, {med2_5nn});
+plotDecisionBoundary(X1_case2, X2_case2, {med2_5nn}, {'5NN'});
 
 saveas(decision1_fig, 'decision_case1.png');
 saveas(decision1_nn_fig, 'decision_nn_case1.png');

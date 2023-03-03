@@ -5,7 +5,8 @@
 % X2 - MxM matrix - meshgrid matrix
 % boundaries - cell array - list of MxM matrix of emperically determined
 % class regions
-function plotDecisionBoundary(X1, X2, boundaries)
+% labels - cell array - label to use for boundary on legend
+function plotDecisionBoundary(X1, X2, boundaries, labels)
     % check function argument preconditions
     assert(isequal(size(X1), size(X2)));
     n_boundaries = length(boundaries);
@@ -19,8 +20,15 @@ function plotDecisionBoundary(X1, X2, boundaries)
         n_classes = max(boundary, [], 'all');
         
         for k=1:n_classes
-            class_k = (boundary == k);
-            contour(X1, X2, class_k, 1, LineWidth=2, EdgeColor=colors(i_b));
+            [~, c] = contour(X1, X2, boundary == k, 1, LineWidth=2, EdgeColor=colors(i_b));
+            % only set display name once so we do not get duplicate entries
+            % of boundary
+            if (k == 1)
+                c.DisplayName = cell2mat(labels(i_b));
+            else
+                c.HandleVisibility = 'off';
+            end
+            
         end
 
         % only color regions if there is a single boundary
@@ -32,7 +40,7 @@ function plotDecisionBoundary(X1, X2, boundaries)
                 cmap(end+1,:) = [0 1 0];
             end
             colormap(cmap);
-            surf(X1, X2, boundary, FaceAlpha=0.1, EdgeColor='none');
+            surf(X1, X2, boundary, FaceAlpha=0.1, EdgeColor='none', HandleVisibility='off');
         end
     end
 end
