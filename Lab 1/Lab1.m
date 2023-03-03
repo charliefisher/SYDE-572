@@ -1,12 +1,11 @@
 close all; clear; clc;  % cleanup workspace
 
 % set seed for random numbers to make results reproduciple
-% TODO: remove me
 rng(1);
 
 %% Class Data %%
 
-% Case 1 Data
+% case 1 Data
 N_A = 200;
 mu_A = [5 10]';
 cov_A = [8 0; 0 4];
@@ -15,7 +14,7 @@ N_B = 200;
 mu_B = [10 15]';
 cov_B = [8 0; 0 4];
 
-% Case 2 Data
+% case 2 Data
 N_C = 100;
 mu_C = [5 10]';
 cov_C = [8 4; 4 40];
@@ -29,6 +28,7 @@ mu_E = [10 5]';
 cov_E = [10 -5; -5 20];
 
 %% Generate Clusters %%
+
 cluster_A = generateClusters(N_A, mu_A, cov_A);
 cluster_B = generateClusters(N_B, mu_B, cov_B);
 cluster_C = generateClusters(N_C, mu_C, cov_C);
@@ -38,40 +38,22 @@ cluster_E = generateClusters(N_E, mu_E, cov_E);
 % store cases as cell arrays
 mu_case1 = {mu_A, mu_B};
 mu_case2 = {mu_C, mu_D, mu_E};
+
 cov_case1 = {cov_A, cov_B};
 cov_case2 = {cov_C, cov_D, cov_E};
 
+clusters_case1 = {cluster_A, cluster_B};
+clusters_case2 = {cluster_C, cluster_D, cluster_E};
+
 %% Plot Clusters and Standard Deviation Countours %%
 
-% Case 1
-clusters1_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
+% case 1 clusters
+clusters1_fig = plotCluster(clusters_case1, 1);
+plotUnitStdContours(mu_case1, cov_case1);
 
-scatter(cluster_A(:,1), cluster_A(:,2), 'r')
-scatter(cluster_B(:,1), cluster_B(:,2), 'b')
-plotUnitStdContour(mu_A, cov_A, 'r');
-plotUnitStdContour(mu_B, cov_B, 'b');
-legend('Class A', 'Class B');
-
-% Case 2
-clusters2_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
-
-scatter(cluster_C(:,1), cluster_C(:,2), 'r');
-scatter(cluster_D(:,1), cluster_D(:,2), 'b');
-scatter(cluster_E(:,1), cluster_E(:,2), 'g');
-plotUnitStdContour(mu_C, cov_C, 'r');
-plotUnitStdContour(mu_D, cov_D, 'b');
-plotUnitStdContour(mu_E, cov_E, 'g');
-legend('Class C', 'Class D', 'Class E');
+% case 2 clusters
+clusters2_fig = plotCluster(clusters_case2, 2);
+plotUnitStdContours(mu_case2, cov_case2);
 
 saveas(clusters1_fig, 'clusters_case1.png');
 saveas(clusters2_fig, 'clusters_case2.png');
@@ -80,23 +62,26 @@ saveas(clusters2_fig, 'clusters_case2.png');
 
 % setup meshgrid for classification
 STEP = 0.1;
-x1 = -5:STEP:25;
-x2 = -5:STEP:25;
-[X1, X2] = meshgrid(x1, x2);
+x1 = -2:STEP:18;
+x2 = 2:STEP:25;
+[X1_case1, X2_case1] = meshgrid(x1, x2);
+x1 = -7:STEP:25;
+x2 = -10:STEP:25;
+[X1_case2, X2_case2] = meshgrid(x1, x2);
 
 % get prototypes for NN
-nn_A = knnPrototype(X1, X2, cluster_A, 1);
-nn_B = knnPrototype(X1, X2, cluster_B, 1);
-nn_C = knnPrototype(X1, X2, cluster_C, 1);
-nn_D = knnPrototype(X1, X2, cluster_D, 1);
-nn_E = knnPrototype(X1, X2, cluster_E, 1);
+nn_A = knnPrototype(X1_case1, X2_case1, cluster_A, 1);
+nn_B = knnPrototype(X1_case1, X2_case1, cluster_B, 1);
+nn_C = knnPrototype(X1_case2, X2_case2, cluster_C, 1);
+nn_D = knnPrototype(X1_case2, X2_case2, cluster_D, 1);
+nn_E = knnPrototype(X1_case2, X2_case2, cluster_E, 1);
 
 % get prototypes for 5NN
-nn5_A = knnPrototype(X1, X2, cluster_A, 200);
-nn5_B = knnPrototype(X1, X2, cluster_B, 200);
-nn5_C = knnPrototype(X1, X2, cluster_C, 100);
-nn5_D = knnPrototype(X1, X2, cluster_D, 200);
-nn5_E = knnPrototype(X1, X2, cluster_E, 150);
+nn5_A = knnPrototype(X1_case1, X2_case1, cluster_A, 5);
+nn5_B = knnPrototype(X1_case1, X2_case1, cluster_B, 5);
+nn5_C = knnPrototype(X1_case2, X2_case2, cluster_C, 5);
+nn5_D = knnPrototype(X1_case2, X2_case2, cluster_D, 5);
+nn5_E = knnPrototype(X1_case2, X2_case2, cluster_E, 5);
 
 % descriminant functions
 MED = @(x, zk, ~) (-zk'*x + 0.5*zk'*zk);
@@ -127,114 +112,51 @@ NN5_2 = @(X) MEDClassifier(X, {nn5_C, nn5_D, nn5_E});
 %% Determine Decision Boundaries %%
 
 % MED, GED, and MAP
-med1 = classifyMeshgrid(X1, X2, MED_1);
-ged1 = classifyMeshgrid(X1, X2, GED_1);
-map1 = classifyMeshgrid(X1, X2, MAP_1);
-med2 = classifyMeshgrid(X1, X2, MED_2);
-ged2 = classifyMeshgrid(X1, X2, GED_2);
-map2 = classifyMeshgrid(X1, X2, MAP_2);
+med1 = classifyMeshgrid(X1_case1, X2_case1, MED_1);
+ged1 = classifyMeshgrid(X1_case1, X2_case1, GED_1);
+map1 = classifyMeshgrid(X1_case1, X2_case1, MAP_1);
+med2 = classifyMeshgrid(X1_case2, X2_case2, MED_2);
+ged2 = classifyMeshgrid(X1_case2, X2_case2, GED_2);
+map2 = classifyMeshgrid(X1_case2, X2_case2, MAP_2);
 
 % NN and 5NN
-med1_nn = classifyMeshgrid(X1, X2, NN_1);
-med2_nn = classifyMeshgrid(X1, X2, NN_2);
-med1_5nn = classifyMeshgrid(X1, X2, NN5_1);
-med2_5nn = classifyMeshgrid(X1, X2, NN5_2);
+med1_nn = classifyMeshgrid(X1_case1, X2_case1, NN_1);
+med1_5nn = classifyMeshgrid(X1_case1, X2_case1, NN5_1);
+med2_nn = classifyMeshgrid(X1_case2, X2_case2, NN_2);
+med2_5nn = classifyMeshgrid(X1_case2, X2_case2, NN5_2);
 
 %% Plot Decision Boundaries %%
 
-% plot case 1 with cluster, standard deviation contour, and decision boundaries
-decision1_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
+% case 1 boundaries for MED, GED, and MAP
+decision1_fig = plotCluster(clusters_case1, 1);
+plotUnitStdContours(mu_case1, cov_case1);
+plotDecisionBoundary(X1_case1, X2_case1, {med1, ged1, map1});
 
-scatter(cluster_A(:,1), cluster_A(:,2), 'r')
-scatter(cluster_B(:,1), cluster_B(:,2), 'b')
+% case 1 boundaries for NN and 5NN
+decision1_nn_fig = plotCluster(clusters_case1, 1);
+plotDecisionBoundary(X1_case1, X2_case1, {med1_nn});
 
-plotUnitStdContour(mu_A, cov_A, 'r')
-plotUnitStdContour(mu_B, cov_B, 'b')
+decision1_5nn_fig = plotCluster(clusters_case1, 1);
+plotDecisionBoundary(X1_case1, X2_case1, {med1_5nn});
 
-contour(X1, X2, med1, 1, LineWidth=2, EdgeColor='k');
-contour(X1, X2, ged1, 1, LineWidth=2, EdgeColor='#FF8000');
-contour(X1, X2, map1, 1, LineWidth=2, EdgeColor='y');
-legend('Class A', 'Class B');  % TODO: fix me
+% case 2 boundaries for MED, GED, and MAP
+decision2_fig = plotCluster(clusters_case2, 2);
+plotUnitStdContours(mu_case2, cov_case2);
+plotDecisionBoundary(X1_case2, X2_case2, {med2, ged2, map2});
 
-nn5_1_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
+% case 2 boundaries for NN and 5NN
+decision2_nn_fig = plotCluster(clusters_case2, 2);
+plotDecisionBoundary(X1_case2, X2_case2, {med2_nn});
 
-scatter(cluster_A(:,1), cluster_A(:,2), 'r')
-scatter(cluster_B(:,1), cluster_B(:,2), 'b')
+decision2_5nn_fig = plotCluster(clusters_case2, 2);
+plotDecisionBoundary(X1_case2, X2_case2, {med2_5nn});
 
-contour(X1, X2, med1_5nn, 1, LineWidth=2, EdgeColor='k');
-legend('Class A', 'Class B');  % TODO: fix me
-
-% plot case 2 with cluster, standard deviation contour, and decision boundaries
-decision2_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
-
-scatter(cluster_C(:,1), cluster_C(:,2), 'r')
-scatter(cluster_D(:,1), cluster_D(:,2), 'b')
-scatter(cluster_E(:,1), cluster_E(:,2), 'g')
-
-plotUnitStdContour(mu_C, cov_C, 'r')
-plotUnitStdContour(mu_D, cov_D, 'b')
-plotUnitStdContour(mu_E, cov_E, 'g')
-
-for k=1:3
-    contour(X1, X2, med2 == k, 1, LineWidth=2, EdgeColor='k');
-    contour(X1, X2, ged2 == k, 1, LineWidth=2, EdgeColor='#FF8000');
-    contour(X1, X2, map2 == k, 1, LineWidth=2, EdgeColor='y');
-end
-legend('Class C', 'Class D', 'Class E'); % TODO: fix me
-
-nn_2_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
-
-scatter(cluster_C(:,1), cluster_C(:,2), 'r')
-scatter(cluster_D(:,1), cluster_D(:,2), 'b')
-scatter(cluster_E(:,1), cluster_E(:,2), 'g')
-
-for k=1:3
-    contour(X1, X2, med2_nn == k, 1, LineWidth=2, EdgeColor='k');
-end
-legend('Class C', 'Class D', 'Class E'); % TODO: fix me
-
-nn5_2_fig = figure;
-xlabel('x_1');
-ylabel('x_2');
-xlim([-5 25]);
-ylim([-5 25]);
-hold on;
-
-scatter(cluster_C(:,1), cluster_C(:,2), 'r')
-% scatter(cluster_D(:,1), cluster_D(:,2), 'b')
-% scatter(cluster_E(:,1), cluster_E(:,2), 'g')
-
-for k=1:3
-    contour(X1, X2, med2_5nn == k, 1, LineWidth=2, EdgeColor='k');
-end
-% legend('Class C', 'Class D', 'Class E'); % TODO: fix me
-
-saveas(decision1_fig, 'decision_boundaries_case1.png');
-saveas(decision2_fig, 'decision_boundaries_case2.png');
-saveas(nn_2_fig, 'nn_case2.png');
-saveas(nn5_1_fig, '5nn_case1.png');
-saveas(nn5_2_fig, '5nn_case2.png');
-
+saveas(decision1_fig, 'decision_case1.png');
+saveas(decision1_nn_fig, 'decision_nn_case1.png');
+saveas(decision1_5nn_fig, 'decision_5nn_case1.png');
+saveas(decision2_fig, 'decision_case2.png');
+saveas(decision2_nn_fig, 'decision_nn_case2.png');
+saveas(decision2_5nn_fig, 'decision_5nn_case2.png');
 
 %% Error Analysis %%
 

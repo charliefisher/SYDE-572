@@ -15,7 +15,7 @@ function [confusion, P_e] = testClassifier(X_test, actual_label, classifier_func
 
     % check function argument preconditions
     assert(isequal(n_test, size(actual_label, 1)));
-    assert(isequal(min(actual_label), 1));
+    assert(isequal(min(actual_label, [], 'all'), 1));
 
     n_classes = max(actual_label);
     confusion = zeros(n_classes);

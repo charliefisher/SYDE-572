@@ -1,3 +1,15 @@
+% knnPrototype - computes the kNN prototype for every point in a 2d space
+%
+% INPUTS:
+% X1 - MxM matrix - meshgrid matrix
+% X2 - MxM matrix - meshgrid matrix
+% cluster - Nx2 matrix - the points in a cluster
+% k - integer - how many neighbors to use when calculating the mean
+% prototype
+%
+% OUTPUT:
+% prototypes - (MxM)x2 matrix - the prototype for every point in the 
+% meshgrid
 function prototypes = knnPrototype(X1, X2, cluster, k)
     % check function argument preconditions
     assert(isequal(size(X1), size(X2)));

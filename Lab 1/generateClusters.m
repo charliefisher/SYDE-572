@@ -1,11 +1,16 @@
-function cluster = generateClusters(N, mu, cov)
-    % TWO WAYS OF MAKING THE RANDOM POINTS, THEY WOULD PROBABLY WANT
-    % REVERSE WHITENING TRANSFROM?
-
-    % Bivariate Normal Random Numbers Example from randn 
-    % points = repmat(mu', N, 1) + randn(N,2)*chol(cov)
-    
-    % Reverse Whitening Transfrom
+% generateClusters - generates random points in cluster with specific
+%                    statistical properties
+%
+% INPUTS:
+% N - integer - number of points to generate
+% mu - 2x1 matrix - mean of cluster
+% cov - 2x2 matrix - covariance of cluster
+%
+% OUTPUT:
+% cluster - Nx2 matrix - the generated points in the cluster
+function cluster = generateClusters(N, mu, cov)    
+    % Inverse of Orthonormal Covariance Transform and Whitening Transfrom
     [eigenvectors, eigenvalues] = eig(cov);
-    cluster = repmat(mu', N, 1) + randn(N,2)*inv(eigenvectors')*sqrt(eigenvalues);    
+    x = randn(N,2);
+    cluster = x*inv(eigenvectors')*sqrt(eigenvalues) + repmat(mu', N, 1);    
 end
