@@ -55,8 +55,8 @@ plotUnitStdContours(mu_case1, cov_case1);
 clusters2_fig = plotCluster(clusters_case2, 2);
 plotUnitStdContours(mu_case2, cov_case2);
 
-saveas(clusters1_fig, 'clusters_case1.png');
-saveas(clusters2_fig, 'clusters_case2.png');
+exportgraphics(clusters1_fig, 'clusters_case1.png');
+exportgraphics(clusters2_fig, 'clusters_case2.png');
 
 %% Create Classifiers  %%
 % build MED, GED, MAP, NN, 5NN classifiers for each case
@@ -124,12 +124,12 @@ plotDecisionBoundary(X1_case2, X2_case2, {med2_nn}, {'NN'});
 decision2_5nn_fig = plotCluster(clusters_case2, 2);
 plotDecisionBoundary(X1_case2, X2_case2, {med2_5nn}, {'5NN'});
 
-saveas(decision1_fig, 'decision_case1.png');
-saveas(decision1_nn_fig, 'decision_nn_case1.png');
-saveas(decision1_5nn_fig, 'decision_5nn_case1.png');
-saveas(decision2_fig, 'decision_case2.png');
-saveas(decision2_nn_fig, 'decision_nn_case2.png');
-saveas(decision2_5nn_fig, 'decision_5nn_case2.png');
+exportgraphics(decision1_fig, 'decision_case1.png');
+exportgraphics(decision1_nn_fig, 'decision_nn_case1.png');
+exportgraphics(decision1_5nn_fig, 'decision_5nn_case1.png');
+exportgraphics(decision2_fig, 'decision_case2.png');
+exportgraphics(decision2_nn_fig, 'decision_nn_case2.png');
+exportgraphics(decision2_5nn_fig, 'decision_5nn_case2.png');
 
 %% Error Analysis %%
 
