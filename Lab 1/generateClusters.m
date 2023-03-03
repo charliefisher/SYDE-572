@@ -11,6 +11,10 @@
 function cluster = generateClusters(N, mu, cov)    
     % Inverse of Orthonormal Covariance Transform and Whitening Transfrom
     [eigenvectors, eigenvalues] = eig(cov);
-    x = randn(N,2);
-    cluster = x*inv(eigenvectors')*sqrt(eigenvalues) + repmat(mu', N, 1);    
+    x = randn(2, N);
+    mu = repmat(mu, 1, N);
+    cluster = inv(eigenvectors')*sqrt(eigenvalues)*x + mu; 
+    % convert cluster back to Nx2 matrix
+    cluster = cluster';
+    assert(isequal(size(cluster), [N 2]));  % output should be Nx2
 end
