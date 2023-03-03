@@ -1,24 +1,16 @@
 % knnPrototype - computes the kNN prototype for every point in a 2d space
 %
 % INPUTS:
-% X1 - MxM matrix - meshgrid matrix
-% X2 - MxM matrix - meshgrid matrix
+% X - Mx2 matrix - points to find prototype for
 % cluster - Nx2 matrix - the points in a cluster
 % k - integer - how many neighbors to use when calculating the mean
 % prototype
 %
 % OUTPUT:
-% prototypes - (MxM)x2 matrix - the prototype for every point in the 
-% meshgrid
-function prototypes = knnPrototype(X1, X2, cluster, k)
+% prototypes - Mx2 matrix - the prototype for every point in X
+function prototypes = knnPrototype(X, cluster, k)
     % check function argument preconditions
-    assert(isequal(size(X1), size(X2)));
-
-    % convert meshgrid into Nx2 matrix where each row is a point
-    % this just makes looping slightly clearer
-    x1_vec = reshape(X1, numel(X1), 1);
-    x2_vec = reshape(X2, numel(X2), 1);
-    X = [x1_vec, x2_vec];
+    assert(k >= 1);
     assert(isequal(size(X,2), 2));  % second dimension should be 2
 
     n_points = size(X,1);

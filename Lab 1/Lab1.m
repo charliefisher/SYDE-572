@@ -69,27 +69,11 @@ x1 = -7:STEP:25;
 x2 = -10:STEP:25;
 [X1_case2, X2_case2] = meshgrid(x1, x2);
 
-% get prototypes for NN
-nn_A = knnPrototype(X1_case1, X2_case1, cluster_A, 1);
-nn_B = knnPrototype(X1_case1, X2_case1, cluster_B, 1);
-nn_C = knnPrototype(X1_case2, X2_case2, cluster_C, 1);
-nn_D = knnPrototype(X1_case2, X2_case2, cluster_D, 1);
-nn_E = knnPrototype(X1_case2, X2_case2, cluster_E, 1);
-
-% get prototypes for 5NN
-nn5_A = knnPrototype(X1_case1, X2_case1, cluster_A, 5);
-nn5_B = knnPrototype(X1_case1, X2_case1, cluster_B, 5);
-nn5_C = knnPrototype(X1_case2, X2_case2, cluster_C, 5);
-nn5_D = knnPrototype(X1_case2, X2_case2, cluster_D, 5);
-nn5_E = knnPrototype(X1_case2, X2_case2, cluster_E, 5);
-
 % descriminant functions
-MED = @(x, zk, ~) (-zk'*x + 0.5*zk'*zk);
 GED = @(x, zk, Sk) ((x-zk)'*inv(Sk)*(x-zk));
 MAP = @(x, zk, Sk, Nk) (2*log(Nk) - log(det(Sk)) - (x-zk)'*inv(Sk)*(x-zk));
 
 % classifiers that work on Nx2 matrix of points
-MEDClassifier = @(X, mu_cell) genericClassifier(X, MED, @min, mu_cell);
 GEDClassifier = @(X, mu_cell, cov_cell) genericClassifier(X, GED, @min, mu_cell, cov_cell);
 MAPClassifier = @(X, mu_cell, cov_cell, N_cell) genericClassifier(X, MAP, @max, mu_cell, cov_cell, N_cell);
 
@@ -103,11 +87,11 @@ GED_2 = @(X) GEDClassifier(X, mu_case2, cov_case2);
 MAP_1 = @(X) MAPClassifier(X, mu_case1, cov_case1, {N_A, N_B});
 MAP_2 = @(X) MAPClassifier(X, mu_case2, cov_case2, {N_C, N_D, N_E});
 
-NN_1 = @(X) MEDClassifier(X, {nn_A, nn_B});
-NN_2 = @(X) MEDClassifier(X, {nn_C, nn_D, nn_E});
+NN_1 = @(X) kNNClassifier(X, clusters_case1, 1);
+NN_2 = @(X) kNNClassifier(X, clusters_case2, 1);
 
-NN5_1 = @(X) MEDClassifier(X, {nn5_A, nn5_B});
-NN5_2 = @(X) MEDClassifier(X, {nn5_C, nn5_D, nn5_E});
+NN5_1 = @(X) kNNClassifier(X, clusters_case1, 5);
+NN5_2 = @(X) kNNClassifier(X, clusters_case2, 5);
 
 %% Determine Decision Boundaries %%
 
@@ -159,6 +143,31 @@ saveas(decision2_nn_fig, 'decision_nn_case2.png');
 saveas(decision2_5nn_fig, 'decision_5nn_case2.png');
 
 %% Error Analysis %%
+
+case1_train = [cluster_A; cluster_B];
+case1_labels = [
+    ones(N_A, 1);
+    ones(N_B, 1)*2;
+];
+
+case2_train = [cluster_C; cluster_D; cluster_E];
+case2_labels = [
+    ones(N_C, 1);
+    ones(N_D, 1)*2;
+    ones(N_E, 1)*3;
+];
+
+% run each classifier on training set
+[~, P_e] = testClassifier(case1_train, case1_labels, MED_1)
+[~, P_e] = testClassifier(case1_train, case1_labels, GED_1)
+[~, P_e] = testClassifier(case1_train, case1_labels, MAP_1)
+[~, P_e] = testClassifier(case1_train, case1_labels, NN_1)
+[~, P_e] = testClassifier(case1_train, case1_labels, NN5_1)
+[~, P_e] = testClassifier(case2_train, case2_labels, MED_2)
+[~, P_e] = testClassifier(case2_train, case2_labels, GED_2)
+[~, P_e] = testClassifier(case2_train, case2_labels, MAP_2)
+[~, P_e] = testClassifier(case2_train, case2_labels, NN_2)
+[~, P_e] = testClassifier(case2_train, case2_labels, NN5_2)
 
 % generate new cluster for test sets
 A_test = generateClusters(N_A, mu_A, cov_A);
