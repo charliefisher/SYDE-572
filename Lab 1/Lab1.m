@@ -59,24 +59,6 @@ saveas(clusters1_fig, 'clusters_case1.png');
 saveas(clusters2_fig, 'clusters_case2.png');
 
 %% Create Classifiers  %%
-
-% setup meshgrid for classification
-STEP = 0.1;
-x1 = -2:STEP:18;
-x2 = 2:STEP:25;
-[X1_case1, X2_case1] = meshgrid(x1, x2);
-x1 = -7:STEP:25;
-x2 = -10:STEP:25;
-[X1_case2, X2_case2] = meshgrid(x1, x2);
-
-% descriminant functions
-GED = @(x, zk, Sk) ((x-zk)'*inv(Sk)*(x-zk));
-MAP = @(x, zk, Sk, Nk) (2*log(Nk) - log(det(Sk)) - (x-zk)'*inv(Sk)*(x-zk));
-
-% classifiers that work on Nx2 matrix of points
-GEDClassifier = @(X, mu_cell, cov_cell) genericClassifier(X, GED, @min, mu_cell, cov_cell);
-MAPClassifier = @(X, mu_cell, cov_cell, N_cell) genericClassifier(X, MAP, @max, mu_cell, cov_cell, N_cell);
-
 % build MED, GED, MAP, NN, 5NN classifiers for each case
 MED_1 = @(X) MEDClassifier(X, mu_case1);
 MED_2 = @(X) MEDClassifier(X, mu_case2);
@@ -95,17 +77,26 @@ NN5_2 = @(X) kNNClassifier(X, clusters_case2, 5);
 
 %% Determine Decision Boundaries %%
 
-% MED, GED, and MAP
+% setup meshgrid for classification
+STEP = 0.1;
+x1 = -2:STEP:18;
+x2 = 2:STEP:25;
+[X1_case1, X2_case1] = meshgrid(x1, x2);
+x1 = -7:STEP:25;
+x2 = -10:STEP:25;
+[X1_case2, X2_case2] = meshgrid(x1, x2);
+
+% case 1
 med1 = classifyMeshgrid(X1_case1, X2_case1, MED_1);
 ged1 = classifyMeshgrid(X1_case1, X2_case1, GED_1);
 map1 = classifyMeshgrid(X1_case1, X2_case1, MAP_1);
+med1_nn = classifyMeshgrid(X1_case1, X2_case1, NN_1);
+med1_5nn = classifyMeshgrid(X1_case1, X2_case1, NN5_1);
+
+% case 2
 med2 = classifyMeshgrid(X1_case2, X2_case2, MED_2);
 ged2 = classifyMeshgrid(X1_case2, X2_case2, GED_2);
 map2 = classifyMeshgrid(X1_case2, X2_case2, MAP_2);
-
-% NN and 5NN
-med1_nn = classifyMeshgrid(X1_case1, X2_case1, NN_1);
-med1_5nn = classifyMeshgrid(X1_case1, X2_case1, NN5_1);
 med2_nn = classifyMeshgrid(X1_case2, X2_case2, NN_2);
 med2_5nn = classifyMeshgrid(X1_case2, X2_case2, NN5_2);
 
@@ -119,7 +110,6 @@ plotDecisionBoundary(X1_case1, X2_case1, {med1, ged1, map1}, {'MED', 'GED', 'MAP
 % case 1 boundaries for NN and 5NN
 decision1_nn_fig = plotCluster(clusters_case1, 1);
 plotDecisionBoundary(X1_case1, X2_case1, {med1_nn}, {'NN'});
-
 decision1_5nn_fig = plotCluster(clusters_case1, 1);
 plotDecisionBoundary(X1_case1, X2_case1, {med1_5nn}, {'5NN'});
 
@@ -131,7 +121,6 @@ plotDecisionBoundary(X1_case2, X2_case2, {med2, ged2, map2}, {'MED', 'GED', 'MAP
 % case 2 boundaries for NN and 5NN
 decision2_nn_fig = plotCluster(clusters_case2, 2);
 plotDecisionBoundary(X1_case2, X2_case2, {med2_nn}, {'NN'});
-
 decision2_5nn_fig = plotCluster(clusters_case2, 2);
 plotDecisionBoundary(X1_case2, X2_case2, {med2_5nn}, {'5NN'});
 
@@ -158,16 +147,16 @@ case2_labels = [
 ];
 
 % run each classifier on training set
-[~, P_e] = testClassifier(case1_train, case1_labels, MED_1)
-[~, P_e] = testClassifier(case1_train, case1_labels, GED_1)
-[~, P_e] = testClassifier(case1_train, case1_labels, MAP_1)
-[~, P_e] = testClassifier(case1_train, case1_labels, NN_1)
-[~, P_e] = testClassifier(case1_train, case1_labels, NN5_1)
-[~, P_e] = testClassifier(case2_train, case2_labels, MED_2)
-[~, P_e] = testClassifier(case2_train, case2_labels, GED_2)
-[~, P_e] = testClassifier(case2_train, case2_labels, MAP_2)
-[~, P_e] = testClassifier(case2_train, case2_labels, NN_2)
-[~, P_e] = testClassifier(case2_train, case2_labels, NN5_2)
+[~, P_e] = classifierError(case1_train, case1_labels, MED_1)
+[~, P_e] = classifierError(case1_train, case1_labels, GED_1)
+[~, P_e] = classifierError(case1_train, case1_labels, MAP_1)
+[~, P_e] = classifierError(case1_train, case1_labels, NN_1)
+[~, P_e] = classifierError(case1_train, case1_labels, NN5_1)
+[~, P_e] = classifierError(case2_train, case2_labels, MED_2)
+[~, P_e] = classifierError(case2_train, case2_labels, GED_2)
+[~, P_e] = classifierError(case2_train, case2_labels, MAP_2)
+[~, P_e] = classifierError(case2_train, case2_labels, NN_2)
+[~, P_e] = classifierError(case2_train, case2_labels, NN5_2)
 
 % generate new cluster for test sets
 A_test = generateClusters(N_A, mu_A, cov_A);
@@ -191,13 +180,13 @@ case2_labels = [
 ];
 
 % run each classifier on test set
-[confusion, P_e] = testClassifier(case1_test, case1_labels, MED_1)
-[confusion, P_e] = testClassifier(case1_test, case1_labels, GED_1)
-[confusion, P_e] = testClassifier(case1_test, case1_labels, MAP_1)
-[confusion, P_e] = testClassifier(case1_test, case1_labels, NN_1)
-[confusion, P_e] = testClassifier(case1_test, case1_labels, NN5_1)
-[confusion, P_e] = testClassifier(case2_test, case2_labels, MED_2)
-[confusion, P_e] = testClassifier(case2_test, case2_labels, GED_2)
-[confusion, P_e] = testClassifier(case2_test, case2_labels, MAP_2)
-[confusion, P_e] = testClassifier(case2_test, case2_labels, NN_2)
-[confusion, P_e] = testClassifier(case2_test, case2_labels, NN5_2)
+[confusion, P_e] = classifierError(case1_test, case1_labels, MED_1)
+[confusion, P_e] = classifierError(case1_test, case1_labels, GED_1)
+[confusion, P_e] = classifierError(case1_test, case1_labels, MAP_1)
+[confusion, P_e] = classifierError(case1_test, case1_labels, NN_1)
+[confusion, P_e] = classifierError(case1_test, case1_labels, NN5_1)
+[confusion, P_e] = classifierError(case2_test, case2_labels, MED_2)
+[confusion, P_e] = classifierError(case2_test, case2_labels, GED_2)
+[confusion, P_e] = classifierError(case2_test, case2_labels, MAP_2)
+[confusion, P_e] = classifierError(case2_test, case2_labels, NN_2)
+[confusion, P_e] = classifierError(case2_test, case2_labels, NN5_2)
