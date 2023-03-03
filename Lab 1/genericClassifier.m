@@ -2,8 +2,7 @@
 %                     function and comparison method
 %
 % INPUTS:
-% X1 - MxM matrix - meshgrid matrix
-% X2 - MxM matrix - meshgrid matrix
+% X - N_samplesx2 matrix - points to classify
 % discriminant_func - function handle - computes discriminant of sample;
 % arguments to discriminant_func are sample (2x1 matrix), prototype (2x1 
 % matrix), and optionally covariance (2x2 matrix)
@@ -18,8 +17,8 @@
 % cluster; if not specified, discriminant_func does not receive Nk
 %
 % OUTPUT:
-% class_label - MxM matrix - the class label for each point in meshgrid
-function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, prototypes, covariances, cluster_sizes)
+% class_label - N_samplesx1 - the class label for each point in X
+function class_label = genericClassifier(X, discriminant_func, min_or_max, prototypes, covariances, cluster_sizes)
     % covariances are optional argument since MED does not use them
     use_covariance = exist('covariances', 'var');
     % Nk is optional argument since MED and GED do not use them
@@ -27,13 +26,7 @@ function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, 
 
     % check function argument preconditions
     assert(~use_covariance || isequal(length(prototypes), length(covariances)));
-    assert(isequal(size(X1), size(X2)));
-
-    % convert meshgrid into Nx2 matrix where each row is a point
-    % this just makes looping slightly clearer
-    x1_vec = reshape(X1, numel(X1), 1);
-    x2_vec = reshape(X2, numel(X2), 1);
-    X = [x1_vec, x2_vec];
+    assert(~use_Nk || isequal(length(prototypes), length(cluster_sizes)));
     assert(isequal(size(X,2), 2));  % second dimension should be 2
 
     n_classes = length(prototypes);
@@ -79,10 +72,7 @@ function class_label = genericClassifier(X1, X2, discriminant_func, min_or_max, 
     end
 
     % find minimum or maximum discriminant
-    % look along 2nd axis (which corresponds to classes
-    [~, compare_idx] = min_or_max(discriminants, [], 2);
-    assert(isequal(size(compare_idx), [n_points 1]));
-    
-    % reshape class label into dimension of meshgrid
-    class_label = reshape(compare_idx, size(X1));
+    % look along 2nd axis (which corresponds to classes)
+    [~, class_label] = min_or_max(discriminants, [], 2);
+    assert(isequal(size(class_label), [n_points 1]));
 end

@@ -78,33 +78,11 @@ saveas(clusters2_fig, 'clusters_case2.png');
 
 %% Create Classifiers  %%
 
-% descriminant functions
-MED = @(x, zk, ~) (-zk'*x + 0.5*zk'*zk);
-GED = @(x, zk, Sk) ((x-zk)'*inv(Sk)*(x-zk));
-MAP = @(x, zk, Sk, Nk) (2*log(Nk) - log(det(Sk)) - (x-zk)'*inv(Sk)*(x-zk));
-
-% classifiers
-MEDClassifier = @(X1, X2, mu_cell) genericClassifier(X1, X2, MED, @min, mu_cell);
-GEDClassifier = @(X1, X2, mu_cell, cov_cell) genericClassifier(X1, X2, GED, @min, mu_cell, cov_cell);
-MAPClassifier = @(X1, X2, mu_cell, cov_cell, N_cell) genericClassifier(X1, X2, MAP, @max, mu_cell, cov_cell, N_cell);
-
-%% Perform Classification %%
-
 % setup meshgrid for classification
 STEP = 0.1;
 x1 = -5:STEP:25;
 x2 = -5:STEP:25;
 [X1, X2] = meshgrid(x1, x2);
-
-mu_case2 = {mean(cluster_C)', mean(cluster_D)', mean(cluster_E)'};
-
-% MED, GED, and MAP
-med1 = MEDClassifier(X1, X2, mu_case1);
-ged1 = GEDClassifier(X1, X2, mu_case1, cov_case1);
-med2 = MEDClassifier(X1, X2, mu_case2);
-ged2 = GEDClassifier(X1, X2, mu_case2, cov_case2);
-map1 = MAPClassifier(X1, X2, mu_case1, cov_case1, {N_A, N_B});
-map2 = MAPClassifier(X1, X2, mu_case2, cov_case2, {N_C, N_D, N_E});
 
 % get prototypes for NN
 nn_A = knnPrototype(X1, X2, cluster_A, 1);
@@ -120,11 +98,47 @@ nn5_C = knnPrototype(X1, X2, cluster_C, 100);
 nn5_D = knnPrototype(X1, X2, cluster_D, 200);
 nn5_E = knnPrototype(X1, X2, cluster_E, 150);
 
+% descriminant functions
+MED = @(x, zk, ~) (-zk'*x + 0.5*zk'*zk);
+GED = @(x, zk, Sk) ((x-zk)'*inv(Sk)*(x-zk));
+MAP = @(x, zk, Sk, Nk) (2*log(Nk) - log(det(Sk)) - (x-zk)'*inv(Sk)*(x-zk));
+
+% classifiers that work on Nx2 matrix of points
+MEDClassifier = @(X, mu_cell) genericClassifier(X, MED, @min, mu_cell);
+GEDClassifier = @(X, mu_cell, cov_cell) genericClassifier(X, GED, @min, mu_cell, cov_cell);
+MAPClassifier = @(X, mu_cell, cov_cell, N_cell) genericClassifier(X, MAP, @max, mu_cell, cov_cell, N_cell);
+
+% build MED, GED, MAP, NN, 5NN classifiers for each case
+MED_1 = @(X) MEDClassifier(X, mu_case1);
+MED_2 = @(X) MEDClassifier(X, mu_case2);
+
+GED_1 = @(X) GEDClassifier(X, mu_case1, cov_case1);
+GED_2 = @(X) GEDClassifier(X, mu_case2, cov_case2);
+
+MAP_1 = @(X) MAPClassifier(X, mu_case1, cov_case1, {N_A, N_B});
+MAP_2 = @(X) MAPClassifier(X, mu_case2, cov_case2, {N_C, N_D, N_E});
+
+NN_1 = @(X) MEDClassifier(X, {nn_A, nn_B});
+NN_2 = @(X) MEDClassifier(X, {nn_C, nn_D, nn_E});
+
+NN5_1 = @(X) MEDClassifier(X, {nn5_A, nn5_B});
+NN5_2 = @(X) MEDClassifier(X, {nn5_C, nn5_D, nn5_E});
+
+%% Determine Decision Boundaries %%
+
+% MED, GED, and MAP
+med1 = classifyMeshgrid(X1, X2, MED_1);
+ged1 = classifyMeshgrid(X1, X2, GED_1);
+map1 = classifyMeshgrid(X1, X2, MAP_1);
+med2 = classifyMeshgrid(X1, X2, MED_2);
+ged2 = classifyMeshgrid(X1, X2, GED_2);
+map2 = classifyMeshgrid(X1, X2, MAP_2);
+
 % NN and 5NN
-med1_nn = MEDClassifier(X1, X2, {nn_A, nn_B});
-med2_nn = MEDClassifier(X1, X2, {nn_C, nn_D, nn_E});
-med1_5nn = MEDClassifier(X1, X2, {nn5_A, nn5_B});
-med2_5nn = MEDClassifier(X1, X2, {nn5_C, nn5_D, nn5_E});
+med1_nn = classifyMeshgrid(X1, X2, NN_1);
+med2_nn = classifyMeshgrid(X1, X2, NN_2);
+med1_5nn = classifyMeshgrid(X1, X2, NN5_1);
+med2_5nn = classifyMeshgrid(X1, X2, NN5_2);
 
 %% Plot Decision Boundaries %%
 
@@ -222,26 +236,37 @@ saveas(nn5_1_fig, '5nn_case1.png');
 saveas(nn5_2_fig, '5nn_case2.png');
 
 
-%% Plot Decision Boundaries %%
+%% Error Analysis %%
 
-% generate test sets for each cluster
+% generate new cluster for test sets
 A_test = generateClusters(N_A, mu_A, cov_A);
 B_test = generateClusters(N_B, mu_B, cov_B);
 C_test = generateClusters(N_C, mu_C, cov_C);
 D_test = generateClusters(N_D, mu_D, cov_D);
 E_test = generateClusters(N_E, mu_E, cov_E);
 
+% combine clusters for each case and add true labels
+case1_test = [A_test; B_test];
+case1_labels = [
+    ones(N_A, 1);
+    ones(N_B, 1)*2;
+];
 
-med1 = MEDClassifier(X1, X2, mu_case1);
-ged1 = GEDClassifier(X1, X2, mu_case1, cov_case1);
-med2 = MEDClassifier(X1, X2, mu_case2);
-ged2 = GEDClassifier(X1, X2, mu_case2, cov_case2);
-map1 = MAPClassifier(X1, X2, mu_case1, cov_case1, {N_A, N_B});
-map2 = MAPClassifier(X1, X2, mu_case2, cov_case2, {N_C, N_D, N_E});
+case2_test = [C_test; D_test; E_test];
+case2_labels = [
+    ones(N_C, 1);
+    ones(N_D, 1)*2;
+    ones(N_E, 1)*3;
+];
 
-med1_nn = MEDClassifier(X1, X2, {nn_A, nn_B});
-med2_nn = MEDClassifier(X1, X2, {nn_C, nn_D, nn_E});
-med1_5nn = MEDClassifier(X1, X2, {nn5_A, nn5_B});
-med2_5nn = MEDClassifier(X1, X2, {nn5_C, nn5_D, nn5_E});
-
-
+% run each classifier on test set
+[confusion, P_e] = testClassifier(case1_test, case1_labels, MED_1)
+[confusion, P_e] = testClassifier(case1_test, case1_labels, GED_1)
+[confusion, P_e] = testClassifier(case1_test, case1_labels, MAP_1)
+[confusion, P_e] = testClassifier(case1_test, case1_labels, NN_1)
+[confusion, P_e] = testClassifier(case1_test, case1_labels, NN5_1)
+[confusion, P_e] = testClassifier(case2_test, case2_labels, MED_2)
+[confusion, P_e] = testClassifier(case2_test, case2_labels, GED_2)
+[confusion, P_e] = testClassifier(case2_test, case2_labels, MAP_2)
+[confusion, P_e] = testClassifier(case2_test, case2_labels, NN_2)
+[confusion, P_e] = testClassifier(case2_test, case2_labels, NN5_2)
