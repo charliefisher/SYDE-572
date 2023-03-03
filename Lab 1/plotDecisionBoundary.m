@@ -20,7 +20,7 @@ function plotDecisionBoundary(X1, X2, boundaries, labels)
         n_classes = max(boundary, [], 'all');
         
         for k=1:n_classes
-            [~, c] = contour(X1, X2, boundary == k, 1, LineWidth=2, EdgeColor=colors(i_b));
+            [~, c] = contour(X1, X2, boundary == k, 1, LineWidth=3, EdgeColor=colors(i_b));
             % only set display name once so we do not get duplicate entries
             % of boundary
             if (k == 1)

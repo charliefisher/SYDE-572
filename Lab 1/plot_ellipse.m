@@ -31,5 +31,5 @@ ellipse = [cos(ang)*a; sin(ang)*b];  % create an elipse aligned with axis at (0,
 % add a the mean to every point of a roated ellipse
 pts = [x;y]*ones(size(ang)) + R*ellipse;
 
-plot( pts(1,:), pts(2,:) , 'Color', color, 'HandleVisibility', 'off' );
+plot( pts(1,:), pts(2,:) , 'Color', color, 'HandleVisibility', 'off', 'LineWidth', 1.75 );
 

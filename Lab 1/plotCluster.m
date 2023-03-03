@@ -38,7 +38,7 @@ function fig = plotCluster(clusters, case_num)
     % plot points in cluster
     for i = 1:n_clusters
         c = clusters{i};
-        scatter(c(:,1), c(:,2), colors(i));
+        scatter(c(:,1), c(:,2), 15, colors(i), LineWidth=1.125);
     end
 
     % add cluster names to legend
