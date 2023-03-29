@@ -45,6 +45,12 @@ def estimate_model_1d(method: EstimationMethod, data: np.ndarray, true_dist: Dis
     if method == EstimationMethod.GAUSSIAN:
         mean, std = np.mean(data), np.std(data)
         _plot_guassian(ax, x_range, mean, std, label='Estimated Distribution', color='tab:orange')
+    elif method == EstimationMethod.EXPONENTIAL:
+        lambda_ = 1 / np.mean(data)
+        _plot_exponential(ax, x_range, lambda_, label='Estimated Distribution', color='tab:orange')
+    elif method == EstimationMethod.UNIFORM:
+        a, b = np.min(data), np.max(data)
+        _plot_uniform(ax, x_range, a, b, label='Estimated Distribution', color='tab:orange')
     
     ax.legend()
     _save_figure('part1/{est}_estimate_for_{true}.png'.format(
@@ -116,6 +122,29 @@ def _plot_exponential(
         
     dist_x = np.linspace(*x_range)
     dist_y = scipy.stats.expon(scale=1/lambda_).pdf(dist_x)
+            
+    ax.plot(dist_x, dist_y, color, label=label)
+    ax.set_ylabel('Probability Density')
+    ax.set_ylim(bottom=0)
+
+
+"""Plots Uniform PDF"""
+def _plot_uniform(
+        ax: matplotlib.axes.Axes, x_range: tuple[float, float],
+        a: float, b: float,
+        label: Optional[str] = None, color: Optional[str] = 'g') -> None:
+
+    assert(b > a)
+
+    # expand x_range if necessary to include all of [a, b] 
+    x_range = list(x_range)  # tuples are immutable, convert to list  
+    if a <= x_range[0]:
+        x_range[0] = a - (b-a)*0.05
+    if x_range[1] <= b:
+        x_range[1] = b + (b-a)*0.05
+
+    dist_x = np.linspace(*x_range, num=1000)
+    dist_y = scipy.stats.uniform(loc=a, scale=b-a).pdf(dist_x)
             
     ax.plot(dist_x, dist_y, color, label=label)
     ax.set_ylabel('Probability Density')
