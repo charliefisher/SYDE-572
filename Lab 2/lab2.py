@@ -1,15 +1,15 @@
 from typing import Any
 
-import numpy as np
 import scipy
 
 import model_estimation
-from sequential_discriminants import learn_classifiers
+import sequential_discriminants
 
 
 def load_data(file_no: int) -> dict[str, Any]:
     file_name = 'data/lab2_{no}.mat'.format(no=file_no)
     return scipy.io.loadmat(file_name)
+
 
 def main() -> None:
     ## Part 1 ##
