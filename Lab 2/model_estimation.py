@@ -9,11 +9,14 @@ import scipy
 import matplotlib
 import matplotlib.pyplot as plt
 
+from parzen import parzen
+
 
 """Distribution type (used for plotting true distributions)"""
 class DistributionType(Enum):
     GAUSSIAN = 1,
     EXPONENTIAL = 2,
+
 
 """Type and parameters information for a given distribution"""
 @dataclass
@@ -21,9 +24,11 @@ class Distribution:
     type: DistributionType
     params: tuple[float, ...]
 
+
 """Factory method for Distribution with Gaussian type"""
 def gaussian_distribution(mean: float, std: float) -> Distribution:
     return Distribution(type=DistributionType.GAUSSIAN, params=(mean, std))
+
 
 """Factory method for Distribution with Exponential type"""
 def exponential_distribution(lambda_: float) -> Distribution:
@@ -47,6 +52,7 @@ def estimate_model_1d(method: EstimationMethod, data: np.ndarray, true_dist: Dis
     else:
         _parametric_estimate_1d(method, data, true_dist)
 
+
 """Parametric estimate for part 1 of the lab"""
 def _parametric_estimate_1d(method: EstimationMethod, data: np.ndarray, true_dist: Distribution) -> None:
     ax, x_range = _plot_true_distribution(data, true_dist)
@@ -68,6 +74,7 @@ def _parametric_estimate_1d(method: EstimationMethod, data: np.ndarray, true_dis
         est=method.name.lower(), true=true_dist.type.name.lower()
     ))
 
+
 """Non-parametric estimate for part 1 of the lab"""
 def _non_parametric_estimate_1d(method: EstimationMethod, data: np.ndarray, true_dist: Distribution) -> None:
     if method == EstimationMethod.PARZEN:
@@ -80,12 +87,7 @@ def _non_parametric_estimate_1d(method: EstimationMethod, data: np.ndarray, true
             ))
     else:
         raise ValueError("Unexpected value for estimation method")
-
-
-"""Main code for part 2 of the lab"""
-def estimate_model_2d(method: EstimationMethod, data: np.ndarray, true_dist: Distribution) -> None:
-    pass
-
+    
 
 """Helper function that creates correct directory for figure, saves it, and closes it"""
 def _save_figure(name: str) -> None:
@@ -94,6 +96,7 @@ def _save_figure(name: str) -> None:
     os.makedirs(dir, exist_ok=True)
     plt.savefig(path)
     plt.close()
+
 
 """Plots true distribution histogram and overlaid PDF"""
 def _plot_true_distribution(
@@ -124,6 +127,7 @@ def _plot_true_distribution(
 
     return (ax2, x_range)
 
+
 """Plots Gaussian PDF"""
 def _plot_guassian(
         ax: matplotlib.axes.Axes, x_range: tuple[float, float],
@@ -136,6 +140,7 @@ def _plot_guassian(
     dist_y = scipy.stats.norm(loc=mean, scale=std).pdf(dist_x)
             
     ax.plot(dist_x, dist_y, color, label=label)
+
 
 """Plots Exponential PDF"""
 def _plot_exponential(
@@ -169,6 +174,7 @@ def _plot_uniform(
             
     ax.plot(dist_x, dist_y, color, label=label)
 
+
 """Plots Parzen Estimation"""
 def _plot_parzen(
         ax: matplotlib.axes.Axes, x_range: tuple[float, float],
@@ -185,3 +191,66 @@ def _plot_parzen(
     dist_y = 1 / N * np.sum(1 / h * scipy.stats.norm().pdf((dist_x_rep - data_rep) / h), axis=1)
             
     ax.plot(dist_x, dist_y, color, label=label)
+
+
+"""Main code for part 2 of the lab"""
+def estimate_model_2d(method: EstimationMethod, data: dict[str, np.ndarray]) -> None:
+    # construct 2D meshgrid over which to evaluate parzen window
+    grid_resolution = 0.5
+    x_lim = (-10, 450)
+    y_lim = (-10, 450)
+    x = np.arange(x_lim[0], x_lim[1] + grid_resolution, grid_resolution)
+    y = np.arange(y_lim[0], y_lim[1] + grid_resolution, grid_resolution)
+    X, Y = np.meshgrid(x, y)
+
+    all_class_data = [data['al'], data['bl'], data['cl']]
+    N_classes = len(all_class_data)
+    class_pdfs = []  # will be in same order as all_class_data
+
+    for data in all_class_data:
+        if method == EstimationMethod.GAUSSIAN:
+            mean, cov = np.mean(data, axis=0), np.cov(data, rowvar=False)
+            pdf = scipy.stats.multivariate_normal(mean, cov).pdf(np.dstack((X, Y)))
+        elif method == EstimationMethod.PARZEN:
+            # refer to tutorial 10 for explanation constructing kernel function
+            n = 3
+            h = np.sqrt(400)
+            n_c = round(n * h / grid_resolution)
+            kernel_size = 2 * n_c + 1
+            x = np.linspace(-n_c * grid_resolution, n_c * grid_resolution, kernel_size)
+            gaussian_kernel = 1/(np.sqrt(2*np.pi) * h) * np.exp(-1/2*(x**2 / h**2))
+            # per tutorial 10 recomendation, provide grid limits
+            # for some reason, parzen.py adds an additional grid space past x_max and y_max
+            # rather than modify the file, just account for this in the limit we pass in 'res'
+            res = [
+                grid_resolution,
+                x_lim[0], y_lim[0],
+                x_lim[1] - grid_resolution, y_lim[1] - grid_resolution
+            ]
+            pdf, *_ = parzen(data, res, gaussian_kernel)
+            pdf[np.isclose(pdf, 0)] = -1  # mark values for which the pdf was not computed
+        else:
+            raise ValueError("Unexpected value for estimation method")
+        
+        class_pdfs.append(pdf)
+
+    # classify samples based on max likelihood 
+    combined_pdfs = np.dstack(class_pdfs)
+    classification = np.argmax(combined_pdfs, axis=2)
+    max_likelihood = np.max(combined_pdfs, axis=2)
+    classification[np.isclose(max_likelihood, -1)] = N_classes  # mark indecision region
+    N_unique = len(np.unique(classification))  # calculate number of classes including indecision region
+
+    # plot ML classification boundary
+    class_labels = ('Class A', 'Class B', 'Class C')
+    class_colors = ('r', 'g', 'b')
+
+    _, ax = plt.subplots()
+    for i, data in enumerate(all_class_data):
+        ax.scatter(data[:, 0], data[:, 1], s=5, c=class_colors[i], label=class_labels[i])
+        ax.contour(X, Y, classification == i, levels=1, colors='k')
+    ax.contourf(X, Y, classification, N_unique - 1, colors=(*class_colors, 'w'), alpha=0.1)
+    ax.set_xlabel('$x_1$')
+    ax.set_ylabel('$x_2$')
+    ax.legend()
+    _save_figure('part2/{method}.png'.format(method=method.name.lower()))

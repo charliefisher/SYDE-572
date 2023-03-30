@@ -23,8 +23,13 @@ def main() -> None:
         model_estimation.estimate_model_1d(method, data_1['b'], b_true_dist)
 
     ## Part 2 ##
+    data_2 = load_data(2)
+
+    model_estimation.estimate_model_2d(model_estimation.EstimationMethod.GAUSSIAN, data_2)
+    model_estimation.estimate_model_2d(model_estimation.EstimationMethod.PARZEN, data_2)
 
     ## Part 3 ##
+    data_3 = load_data(3)
 
 
 if __name__ == '__main__':
