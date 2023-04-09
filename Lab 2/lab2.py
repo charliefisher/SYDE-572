@@ -12,7 +12,7 @@ def load_data(file_no: int) -> dict[str, Any]:
 
 
 def main() -> None:
-    ## Part 1 ##
+    # Part 1 ##
     a_true_dist = model_estimation.gaussian_distribution(mean=5, std=1)
     b_true_dist = model_estimation.exponential_distribution(lambda_=1)
 
@@ -30,6 +30,7 @@ def main() -> None:
 
     ## Part 3 ##
     data_3 = load_data(3)
+    sequential_discriminants.learn_classifiers(data_3['a'], data_3['b'])
 
 
 if __name__ == '__main__':
