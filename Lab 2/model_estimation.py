@@ -57,14 +57,25 @@ def estimate_model_1d(method: EstimationMethod, data: np.ndarray, true_dist: Dis
 def _parametric_estimate_1d(method: EstimationMethod, data: np.ndarray, true_dist: Distribution) -> None:
     ax, x_range = _plot_true_distribution(data, true_dist)
 
+    print(
+        '{:<55}'.format(
+            '{method} Parametric Estimate (True: {true})'.format(
+                method=method.name.title(), true=true_dist.type.name.title()
+            )
+        ), end='', sep=''
+    )
+
     if method == EstimationMethod.GAUSSIAN:
         mean, std = np.mean(data), np.std(data)
+        print('μ: {:.4f}     σ: {:.4f}'.format(mean, std))
         _plot_guassian(ax, x_range, mean, std, 'Estimated Distribution', 'tab:orange')
     elif method == EstimationMethod.EXPONENTIAL:
         lambda_ = 1 / np.mean(data)
+        print('λ: {:.4f}'.format(lambda_))
         _plot_exponential(ax, x_range, lambda_, 'Estimated Distribution', 'tab:orange')
     elif method == EstimationMethod.UNIFORM:
         a, b = np.min(data), np.max(data)
+        print('a: {:.4f}     b: {:.4f}'.format(a, b))
         _plot_uniform(ax, x_range, a, b, 'Estimated Distribution', 'tab:orange')
     else:
         raise ValueError("Unexpected value for estimation method")
