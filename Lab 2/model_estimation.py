@@ -119,6 +119,7 @@ def _plot_true_distribution(
     # plot histogram with normal distribution overlaid on seperate y axis
     _, ax = plt.subplots()
     ax.hist(bins[:-1], bins, weights=counts, fc=[*matplotlib.colors.to_rgb('b'), 0.4])
+    ax.set_xlabel('$x$')
     ax.set_ylabel('Occurence')
     ax.set_ylim(bottom=0)
 
