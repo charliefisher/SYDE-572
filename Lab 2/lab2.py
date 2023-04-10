@@ -30,7 +30,14 @@ def main() -> None:
 
     ## Part 3 ##
     data_3 = load_data(3)
-    sequential_discriminants.learn_classifiers(data_3['a'], data_3['b'])
+    sequential_discriminants.estimate_sequential_classifier(data_3, 'classify_1')
+    sequential_discriminants.estimate_sequential_classifier(data_3, 'classify_2')
+    sequential_discriminants.estimate_sequential_classifier(data_3, 'classify_3')
+    
+    sequential_discriminants.test_limited_sequential_classifier(data_3)
+
+
+
 
 
 if __name__ == '__main__':
